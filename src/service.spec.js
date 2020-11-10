@@ -4,6 +4,9 @@ const service = require('./service');
 const { Job, Profile } = require('./model');
 
 beforeEach(async () => {
+  // In a real situation I'd try to run SQLite in memory or
+  // complete separate the database tests (integration tests)
+  // from the unit tests related to business logics.
   await seed();
 });
 
@@ -161,7 +164,7 @@ describe('Deel Task API', () => {
     });
   });
 
-  fdescribe('when depositing an amount into the client balance', () => {
+  describe('when depositing an amount into the client balance', () => {
     it('should throw error if the amount is invalid', async () => {
       const invalidAmount = 'not-a-number';
 
@@ -197,6 +200,17 @@ describe('Deel Task API', () => {
       const client = await Profile.findByPk(clientId);
 
       expect(client.balance).toEqual(431.11); // 231.11 + 200
+    });
+  });
+
+  describe('when getting the best profession', () => {
+    it('should get the best profession', async () => {
+      const start = '2020-01-01';
+      const end = '2020-12-31';
+
+      var profession = await service.getBestProfession({ start, end });
+
+      expect(profession).toEqual('Programmer');
     });
   });
 });

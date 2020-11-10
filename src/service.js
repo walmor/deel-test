@@ -146,6 +146,29 @@ const service = {
       throw errors.InternalError();
     }
   },
+
+  async getBestProfession({ start, end }) {
+    // TODO: I didn't have enough time to validate the inputs.
+
+    const jobs = await Job.findAll({
+      where: {
+        paid: true,
+        paymentDate: {
+          [Op.between]: [start, end],
+        },
+      },
+      include: { all: true, nested: true },
+      group: ['Contract.Contractor.profession'],
+      order: [[sequelize.fn('sum', sequelize.col('price')), 'DESC']],
+      limit: 1,
+    });
+
+    return jobs[0].Contract.Contractor.profession;
+  },
+
+  async getBestClients({ start, end, limit }) {
+    // TODO: I didn't have enough time to implement this
+  },
 };
 
 module.exports = service;

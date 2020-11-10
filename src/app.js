@@ -70,6 +70,17 @@ app.post('/balances/deposit/:clientId', getProfile, async (req, res) => {
   res.status(204).end();
 });
 
+/**
+ * @returns the best profession
+ */
+app.get('/admin/best-profession', getProfile, async (req, res) => {
+  const { start, end } = req.query;
+
+  const profession = await service.getBestProfession({ start, end });
+
+  res.json({ profession });
+});
+
 // error handler for better error payloads.
 app.use((err, req, res, next) => {
   if (httpErrors.isHttpError(err)) {
