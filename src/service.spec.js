@@ -64,4 +64,36 @@ describe('Deel Task API', () => {
       expect(contracts[1].status).toEqual('in_progress');
     });
   });
+
+  describe('when getting unpaid jobs', () => {
+    it('should return unpaid jobs for non-terminated contracts that belong to a client', async () => {
+      // client 1 has two unpaid jobs but one is within a terminated contract
+      const clientId = 1;
+
+      const unpaidJobs = await service.getUnpaidJobs({ userId: clientId });
+
+      expect(unpaidJobs).toHaveLength(1);
+      expect(unpaidJobs[0].id).toEqual(2);
+    });
+
+    it('should return unpaid jobs for non-terminated contracts that belong to a contractor', async () => {
+      // contractor 6 has two unpaid jobs
+      const contractorId = 6;
+
+      const unpaidJobs = await service.getUnpaidJobs({ userId: contractorId });
+
+      expect(unpaidJobs).toHaveLength(2);
+      expect(unpaidJobs[0].id).toEqual(2);
+      expect(unpaidJobs[1].id).toEqual(3);
+    });
+
+    it('should return return an empty list if the contractor has no unpaid jobs', async () => {
+      // contractor 5 has no unpaid jobs
+      const contractorId = 5;
+
+      const unpaidJobs = await service.getUnpaidJobs({ userId: contractorId });
+
+      expect(unpaidJobs).toHaveLength(0);
+    });
+  });
 });

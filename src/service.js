@@ -1,6 +1,6 @@
 const { Op } = require('sequelize');
 const errors = require('./errors');
-const { Contract } = require('./model');
+const { Contract, Job } = require('./model');
 
 const service = {
   async getContractById({ contractId, userId }) {
@@ -27,6 +27,20 @@ const service = {
     });
 
     return contracts;
+  },
+
+  async getUnpaidJobs({ userId }) {
+    const unpaidJobs = await Job.findAll({
+      where: {
+        paid: { [Op.or]: [null, false] },
+        '$Contract.status$': { [Op.ne]: 'terminated' },
+        [Op.or]: [{ '$Contract.ClientId$': userId }, { '$Contract.ContractorId$': userId }],
+      },
+      include: Contract,
+      order: ['id'],
+    });
+
+    return unpaidJobs;
   },
 };
 

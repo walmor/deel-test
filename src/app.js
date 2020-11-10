@@ -35,6 +35,17 @@ app.get('/contracts', getProfile, async (req, res) => {
   res.json(contract);
 });
 
+/**
+ * @returns unpaid jobs
+ */
+app.get('/jobs/unpaid', getProfile, async (req, res) => {
+  const { id: userId } = req.profile;
+
+  const unpaidJobs = await service.getUnpaidJobs({ userId });
+
+  res.json(unpaidJobs);
+});
+
 // error handler for better error payloads.
 app.use((err, req, res, next) => {
   if (httpErrors.isHttpError(err)) {
