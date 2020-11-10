@@ -160,4 +160,43 @@ describe('Deel Task API', () => {
       expect(contractor.balance).toEqual(1415); // 1214 + 201
     });
   });
+
+  fdescribe('when depositing an amount into the client balance', () => {
+    it('should throw error if the amount is invalid', async () => {
+      const invalidAmount = 'not-a-number';
+
+      const deposit = service.deposit({ amount: invalidAmount, clientId: 1 });
+
+      await expect(deposit).rejects.toMatchObject({ ...errors.InvalidAmount() });
+    });
+
+    it('should throw error if the client does not exist', async () => {
+      const invalidClientId = 999;
+
+      const deposit = service.deposit({ amount: 100, clientId: invalidClientId });
+
+      await expect(deposit).rejects.toMatchObject({ ...errors.ClientNotFound(invalidClientId) });
+    });
+
+    it('should throw error if the amount exceeds the 25% limit', async () => {
+      const clientId = 2; // Client 2 has $402 of unpaid jobs
+      const expectedLimit = 502.5;
+      const amount = 503; // His limit is 402 * 1.25 = 502.50
+
+      const deposit = service.deposit({ amount, clientId });
+
+      await expect(deposit).rejects.toMatchObject({ ...errors.DepositLimitExceeded(expectedLimit) });
+    });
+
+    it('should deposit into the client balance if all the validations pass', async () => {
+      const clientId = 2; // Client 2 has $231.11 of initial balance
+      const amount = 200;
+
+      await service.deposit({ amount, clientId });
+
+      const client = await Profile.findByPk(clientId);
+
+      expect(client.balance).toEqual(431.11); // 231.11 + 200
+    });
+  });
 });

@@ -91,6 +91,61 @@ const service = {
       throw errors.InternalError();
     }
   },
+
+  async deposit({ amount, clientId }) {
+    try {
+      amount = parseFloat(amount);
+
+      if (Number.isNaN(amount)) {
+        throw errors.InvalidAmount();
+      }
+
+      await sequelize.transaction(async (transaction) => {
+        const client = await Profile.findOne({
+          where: { id: clientId },
+          attributes: ['balance'],
+          transaction,
+        });
+
+        if (!client) {
+          throw errors.ClientNotFound(clientId);
+        }
+
+        const unpaidAmount = await Job.sum('price', {
+          where: {
+            paid: {
+              [Op.or]: [null, false],
+            },
+            '$Contract.ClientId$': clientId,
+          },
+          include: Contract,
+          transaction,
+        });
+
+        // As the clientId is coming from the URL,
+        // I'm assuming this operation is being executed by an admin user,
+        // so I'm not validating the clientId againt the userId.
+        // I'd have asked in a real situation.
+
+        const { balance } = client;
+        const limit = unpaidAmount * 1.25;
+
+        if (amount > limit) {
+          throw errors.DepositLimitExceeded(limit);
+        }
+
+        await Profile.update({ balance: balance + amount }, { where: { id: clientId }, transaction });
+      });
+    } catch (error) {
+      if (errors.isHttpError(error)) {
+        throw error;
+      }
+
+      // In a real app, we should log the error somewhere else, such as a monitoring tool like Sentry.
+      console.log(error);
+      throw errors.InternalError();
+    }
+  },
 };
 
 module.exports = service;

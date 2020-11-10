@@ -19,9 +19,22 @@ const TerminatedContract = () =>
 const NotEnoughBalance = () =>
   new err.BadRequest({ code: 'not-enough-balance', message: 'Not enough balance to pay for this job.' });
 
+const DepositLimitExceeded = (limit) =>
+  new err.BadRequest({
+    code: 'deposit-limit-exceeded',
+    message: `Cannot deposit more than 25% of the cleint current unpaid jobs. Limit:  ${limit}`,
+  });
+
+const ClientNotFound = (id) =>
+  new err.NotFound({ code: 'client-not-found', message: `No client found with id ${id}.` });
+
+const InvalidAmount = () =>
+  new err.BadRequest({ code: 'invalid-amount', message: 'The amount should be a valid number.' });
+
 const isHttpError = err.isHttpError;
 
 module.exports = {
+  isHttpError,
   AccessDenied,
   InternalError,
   ContractNotFound,
@@ -29,5 +42,7 @@ module.exports = {
   JobAlreadyPaid,
   TerminatedContract,
   NotEnoughBalance,
-  isHttpError,
+  DepositLimitExceeded,
+  ClientNotFound,
+  InvalidAmount,
 };

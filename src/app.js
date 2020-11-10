@@ -47,13 +47,25 @@ app.get('/jobs/unpaid', getProfile, async (req, res) => {
 });
 
 /**
- * @returns unpaid jobs
+ * @pays for a job
  */
 app.post('/jobs/:jobId/pay', getProfile, async (req, res) => {
   const { id: userId } = req.profile;
   const { jobId } = req.params;
 
   await service.payForJob({ jobId, userId });
+
+  res.status(204).end();
+});
+
+/**
+ * @deposits into the client balance
+ */
+app.post('/balances/deposit/:clientId', getProfile, async (req, res) => {
+  const { amount } = req.body;
+  const { clientId } = req.params;
+
+  await service.deposit({ amount, clientId });
 
   res.status(204).end();
 });
