@@ -46,6 +46,18 @@ app.get('/jobs/unpaid', getProfile, async (req, res) => {
   res.json(unpaidJobs);
 });
 
+/**
+ * @returns unpaid jobs
+ */
+app.post('/jobs/:jobId/pay', getProfile, async (req, res) => {
+  const { id: userId } = req.profile;
+  const { jobId } = req.params;
+
+  await service.payForJob({ jobId, userId });
+
+  res.status(204).end();
+});
+
 // error handler for better error payloads.
 app.use((err, req, res, next) => {
   if (httpErrors.isHttpError(err)) {

@@ -96,4 +96,68 @@ describe('Deel Task API', () => {
       expect(unpaidJobs).toHaveLength(0);
     });
   });
+
+  describe('when paying for a job', () => {
+    it('should throw error if the job does not exist', async () => {
+      const invalidJobId = 999;
+
+      const payForJob = service.payForJob({ jobId: invalidJobId, userId: 1 });
+
+      await expect(payForJob).rejects.toMatchObject({ ...errors.JobNotFound(invalidJobId) });
+    });
+
+    it('should throw error if the job does not belong to the client', async () => {
+      const jobId = 2; // Job 2 belongs to client 1;
+      const clientId = 2; // But we're trying to access with client 2;
+
+      const payForJob = service.payForJob({ jobId, userId: clientId });
+
+      await expect(payForJob).rejects.toMatchObject({ ...errors.AccessDenied(jobId) });
+    });
+
+    it('should throw error if the job is already paid', async () => {
+      const paidJobId = 7; // Job 7 is already paid;
+      const clientId = 1;
+
+      const payForJob = service.payForJob({ jobId: paidJobId, userId: clientId });
+
+      await expect(payForJob).rejects.toMatchObject({ ...errors.JobAlreadyPaid() });
+    });
+
+    it('should throw error if the contract is terminated', async () => {
+      const jobId = 1; // Job 1 is not paid but its contract is terminated;
+      const clientId = 1;
+
+      const payForJob = service.payForJob({ jobId, userId: clientId });
+
+      await expect(payForJob).rejects.toMatchObject({ ...errors.TerminatedContract() });
+    });
+
+    it('should throw error if the client has not enough balance', async () => {
+      const jobId = 5; // Job 5's price is $200 but the client has only $1.3;
+      const clientId = 4;
+
+      const payForJob = service.payForJob({ jobId, userId: clientId });
+
+      await expect(payForJob).rejects.toMatchObject({ ...errors.NotEnoughBalance() });
+    });
+
+    it('should mark the job as paid and set the balances when all the validations pass', async () => {
+      const jobId = 2; // Job 2's price is $201
+      const clientId = 1; // Client 1 has $1150
+      const contratorId = 6; // Contractor 6 has $1214
+
+      await service.payForJob({ jobId, userId: clientId });
+
+      const job = await Job.findByPk(jobId);
+      const client = await Profile.findByPk(clientId);
+      const contractor = await Profile.findByPk(contratorId);
+
+      expect(job.paid).toBe(true);
+      expect(job.paymentDate).toBeInstanceOf(Date);
+
+      expect(client.balance).toEqual(949); // 1350 - 201
+      expect(contractor.balance).toEqual(1415); // 1214 + 201
+    });
+  });
 });
