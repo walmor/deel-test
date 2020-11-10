@@ -17,6 +17,17 @@ const service = {
 
     return contract;
   },
+
+  async getActiveContracts({ userId }) {
+    const contracts = await Contract.findAll({
+      where: {
+        status: { [Op.ne]: 'terminated' },
+        [Op.or]: [{ ClientId: userId }, { ContractorId: userId }],
+      },
+    });
+
+    return contracts;
+  },
 };
 
 module.exports = service;

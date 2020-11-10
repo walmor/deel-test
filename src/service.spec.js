@@ -43,4 +43,25 @@ describe('Deel Task API', () => {
       expect(contract.id).toEqual(contractId);
     });
   });
+
+  describe('when getting active contracts', () => {
+    it('should a list of active contracts that belongs to a client', async () => {
+      const clientId = 1; // 1 is the id of a client with 1 in-progress and 1 terminated contract
+
+      const contracts = await service.getActiveContracts({ userId: clientId });
+
+      expect(contracts).toHaveLength(1);
+      expect(contracts[0].status).toEqual('in_progress');
+    });
+
+    it('should a list of active contracts that belongs to a contractor', async () => {
+      const contractorId = 8; // 8 is the id of a contractor with 1 in-progress and 1 new contract
+
+      const contracts = await service.getActiveContracts({ userId: contractorId });
+
+      expect(contracts).toHaveLength(2);
+      expect(contracts[0].status).toEqual('new');
+      expect(contracts[1].status).toEqual('in_progress');
+    });
+  });
 });

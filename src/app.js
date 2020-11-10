@@ -24,6 +24,17 @@ app.get('/contracts/:id', getProfile, async (req, res) => {
   res.json(contract);
 });
 
+/**
+ * @returns contracts
+ */
+app.get('/contracts', getProfile, async (req, res) => {
+  const { id: userId } = req.profile;
+
+  const contract = await service.getActiveContracts({ userId });
+
+  res.json(contract);
+});
+
 // error handler for better error payloads.
 app.use((err, req, res, next) => {
   if (httpErrors.isHttpError(err)) {
