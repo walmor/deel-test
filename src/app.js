@@ -5,6 +5,7 @@ const httpErrors = require('http-errors');
 require('express-async-errors');
 
 const { getProfile } = require('./middleware/getProfile');
+const service = require('./service');
 
 const app = express();
 app.use(bodyParser.json());
@@ -12,14 +13,14 @@ app.set('sequelize', sequelize);
 app.set('models', sequelize.models);
 
 /**
- * FIX ME!
  * @returns contract by id
  */
 app.get('/contracts/:id', getProfile, async (req, res) => {
-  const { Contract } = req.app.get('models');
-  const { id } = req.params;
-  const contract = await Contract.findOne({ where: { id } });
-  if (!contract) return res.status(404).end();
+  const { id: contractId } = req.params;
+  const { id: userId } = req.profile;
+
+  const contract = await service.getContractById({ contractId, userId });
+
   res.json(contract);
 });
 
